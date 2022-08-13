@@ -1,0 +1,3 @@
+
+class DefaultSettings():
+    pass
