@@ -5,11 +5,19 @@ def _createApp(DefaultSet,enableSet):
     app = Flask(__name__)
     app.config.from_object(DefaultSet)
     if enableSet:
-        app.config.from_envvar(GLOBAL_SETTING_ENV_NAME)
+        app.config.from_envvar(GLOBAL_SETTING_ENV_NAME,silent=True)
     return app
 
 def createAPP(DefaultSet,enableSet):
     app = _createApp(DefaultSet,enableSet)
+
+    #配置日志
+    from utils.logging import create_logger
+    create_logger(app)
+
+    # 注册url转换器
+    from utils.converter import registerConverter
+    registerConverter(app)
 
     #应用注册
     #用户登录
@@ -30,6 +38,11 @@ def createAPP(DefaultSet,enableSet):
     from rediscluster import RedisCluster
     app.redis_cluster = RedisCluster(startup_nodes=app.config.get("REDIS_CLUSTER"))
 
+    #雪花算法
+    from utils.snowflake.id_worker import  IdWorker
+    app.idWorker = IdWorker(app.config['DATACENTER_ID'],
+                             app.config['WORKER_ID'],
+                             app.config['SEQUENCE'])
 
     return app
 

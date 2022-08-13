@@ -1,5 +1,12 @@
 
 class DefaultSettings():
+
+    # 日志
+    LOGGING_LEVEL = 'DEBUG'
+    LOGGING_FILE_DIR = '/home/time/logs'
+    LOGGING_FILE_MAX_BYTES = 300 * 1024 * 1024
+    LOGGING_FILE_BACKUP = 10
+
     #mysql数据库配置
     SQLALCHEMY_BINDS = {
         "m":"mysql://root:liujun@192.168.153.3:3306/csdn",
@@ -25,6 +32,16 @@ class DefaultSettings():
         {'host': '127.0.0.1', 'port': '7001'},
         {'host': '127.0.0.1', 'port': '7002'},
     ]
+
+    # Snowflake ID Worker 参数
+    DATACENTER_ID = 0
+    WORKER_ID = 0
+    SEQUENCE = 0
+
+    #jwt密钥
+    JWT_SECRET = "23498ur983(&*8hjkdj*&^^"
+    JWT_EXPIRY_HOURS = 2#token 过期时间
+    JWT_REFRESH_DAYS = 14#刷新token过期时间
 
 
 class CeleryConfig():
