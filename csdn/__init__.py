@@ -44,5 +44,9 @@ def createAPP(DefaultSet,enableSet):
                              app.config['WORKER_ID'],
                              app.config['SEQUENCE'])
 
+    #fastdfs存储图片
+    from fdfs_client.client import Fdfs_client
+    app.client = Fdfs_client('/home/time/csdnNew/csdnNew/common/utils/fdfs/client.conf')
+
     return app
 

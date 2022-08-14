@@ -3,6 +3,9 @@ import datetime
 
 from flask import current_app
 
+from sqlalchemy import or_
+from sqlalchemy.exc import DatabaseError
+
 from flask_restful import Resource
 from flask_restful.reqparse import RequestParser
 
@@ -10,7 +13,7 @@ from models import db
 from utils import parsers
 from . import constants
 from celery_tasks.sms.tasks import send_sms_code
-from utils.get_token import getJWT
+from utils.get_token import getToken
 
 from redis.exceptions import ConnectionError
 
@@ -37,23 +40,6 @@ class GetSms(Resource):
             return {"msg": "发送失败，请稍后重试"}, 401
 
 class PhoneLogin(Resource):
-    def get_token(self,user_id,refresh=True):
-        '''
-        第一次同时获取token和refreshtoken
-        :param user_id:用户id
-        :param refresh:refresh_token过期，则需要重新获取
-        :return:token和自动刷新token
-        '''
-        secret = current_app.config.get("JWT_SCRET")
-        expire = str(datetime.datetime.utcnow() + datetime.timedelta(hours=current_app.config.get("JWT_EXPIRY_HOURS")))
-        payload = {"user_id":user_id,"refresh":False}
-        token = getJWT(payload,expire,secret)
-        refresh_token = None
-        if refresh:
-            expire = str(datetime.datetime.utcnow() + datetime.timedelta(hours=current_app.config.get("JWT_REFRESH_DAYS")))
-            payload = {"user_id": user_id, "refresh": True}
-            refresh_token = getJWT(payload,expire,secret)
-        return token,refresh_token
     def post(self):
         """
         手机号登录
@@ -80,6 +66,7 @@ class PhoneLogin(Resource):
         #验证
         # 验证码失效
         if sms_code_v is None:
+            print(2222222222222)
             return {"msg": "验证已过期，请重新发送"}, 400
         if sms_code_v.decode() != sms_code:
             return {"msg": "验证码输入错误，请重新输入"}, 401
@@ -104,12 +91,37 @@ class PhoneLogin(Resource):
                 db.session.rollback()
                 return {"msg":"数据库异常"},405
         #用户登陆成功，响应正确状态码同时，写入token认证
-        token,refresh_token = self.get_token(user.id)
-        print(token,refresh_token)
+        token,refresh_token = getToken(user.id)
         return {"token":token,"refresh_token":refresh_token},201
 
 class PasswdLogin(Resource):
-    pass
+    def post(self):
+        """
+        账号密码登录
+        :return: token
+        """
+        parser = RequestParser()
+        parser.add_argument("username",type=parsers.check_name,required=True,location="json")
+        parser.add_argument("password",type=parsers.check_pwd,required=True,location="json")
+        args = parser.parse_args()
+        username = args.username
+        password = args.password
+        try:
+            user = User.query.filter(or_(User.name == username, User.mobile == username, User.email == username),
+                                     User.password == password).first()
+            if not user:
+                return {"msg": "用户或密码错误"}, 402
+            else:
+                token, refresh_token = getToken(user.id)
+                return {"token": token, "refresh_token": refresh_token}, 201
+        except DatabaseError as e:
+            current_app.logger.error(e)
+            return {"msg":"数据库异常"},405
+
+
+
+
+
 
 
 
