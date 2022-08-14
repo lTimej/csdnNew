@@ -18,6 +18,10 @@ def createAPP(DefaultSet,enableSet):
     # 注册url转换器
     from utils.converter import registerConverter
     registerConverter(app)
+    
+    #请求钩子，判断是否登录
+    from utils.middleware import authVerify
+    app.before_request(authVerify)
 
     #应用注册
     #用户登录

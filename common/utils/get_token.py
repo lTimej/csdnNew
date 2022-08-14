@@ -18,7 +18,7 @@ def getJWT(payload: dict,expire,secret=None):
     token = jwt.encode(payload,secret,algorithm="HS256")
     return token
 
-def verifyToken(token,secret):
+def verifyToken(token,secret=None):
     if not secret:
         secret = current_app.config.get("JWT_SECRET")
     try:
