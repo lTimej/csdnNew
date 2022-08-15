@@ -55,7 +55,6 @@ class UserBasicInfoCache():
         user_dict['visitor'] = dataStastics.UserVisitedStastics.get(self.user_id)
         return user_dict
 
-
     def save(self):
         """
         查数据库并进行缓存
@@ -76,9 +75,9 @@ class UserBasicInfoCache():
         user_dict = {
             "user_name":user.name,
             "head_photo": current_app.config.get('FDFS_DOMAIN') + user.profile_photo if user.profile_photo else  current_app.config.get('FDFS_DOMAIN') + contants.DEFAULT_USER_PROFILE_PHOTO,
-            "user_introduction":user.introduction,
-            "user_code_year":user.code_year,
-            "user_career":user.profile.career
+            "introduce":user.introduction,
+            "code_year":user.code_year,
+            "career":user.profile.career
         }
         user_str = json.dumps(user_dict)
         try:
@@ -136,6 +135,7 @@ class UserOtherInfo():
                 load_only(UserProfile.birthday, UserProfile.gender, UserProfile.tag, UserProfile.area)).filter(
                 UserProfile.id == self.user_id).first()
             user_profile = {
+                #数据上日期为datetime类型，通过strftime将datetime类型转为字符串类型
                 'birthday': userProfile.birthday.strftime('%Y-%m-%d') if userProfile.birthday else '',
                 'gender': '男' if userProfile.gender == 0 else '女',
                 'tag': userProfile.tag,

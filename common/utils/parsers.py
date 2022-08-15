@@ -1,6 +1,10 @@
 
 import re
+import imghdr
+from datetime import datetime
 from utils.getMD5 import getMd5
+
+from models.user import UserProfile
 
 
 #手机号验证
@@ -57,3 +61,42 @@ def check_email(str):
     if not re.match(pattern,str):
         raise ValueError("{} is invalid".format(str))
     return str
+
+#图片验证
+def check_img(str):
+    """
+    imghdr是一个用来检测图片类型的模块，传递给它的可以是一个文件对象，也可以是一个字节流
+    :param str:
+    :return:
+    """
+    try:
+        img_type = imghdr.what(str)
+        print(1111111111111111111111,img_type)
+    except :
+        raise ValueError("{} is invalid".format(str))
+    if not img_type:
+        raise ValueError("{} is invalid".format(str))
+    else:
+        return str
+
+def check_gender(str):
+    try:
+        str = int(str)
+    except:
+        raise ValueError("{} is invalid".format(str))
+    if str == UserProfile.GENDER.FEMALE or str == UserProfile.GENDER.MALE:
+        return str
+    else:
+        raise ValueError("{} is invalid".format(str))
+
+def chech_date(str):
+    try:
+        if not str:
+            return str
+        #前端输入为字符串类型，数据库为date类型，通过datetime.datetime.strptime将字符串类型转为datetime类型
+        _str = datetime.strptime(str,'%Y-%m-%d')
+    except:
+        raise ValueError("{} is invalid".format(str))
+    else:
+        return _str
+
