@@ -17,4 +17,4 @@ class StasticsBase(object):
 
 #用户关注数
 class UserFocusStastics(StasticsBase):
-    key = ""
+    key = ":"
