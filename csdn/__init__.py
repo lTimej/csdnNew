@@ -1,5 +1,7 @@
 from flask import Flask
 from utils.constants import GLOBAL_SETTING_ENV_NAME
+from apscheduler.schedulers.background import BackgroundScheduler
+from apscheduler.executors.pool import ThreadPoolExecutor
 
 def _createApp(DefaultSet,enableSet):
     app = Flask(__name__)
@@ -22,6 +24,19 @@ def createAPP(DefaultSet,enableSet):
     #请求钩子，判断是否登录
     from utils.middleware import authVerify
     app.before_request(authVerify)
+    
+    #启动定时任务
+    executors = {  # 10个线程
+        'default': ThreadPoolExecutor(10)
+    }
+    # 负责管理定时任务
+    #  BackgroundScheduler 在框架程序（如Django、Flask）中使用
+    app.scheduler = BackgroundScheduler(executors=executors)
+    # 添加"静态的"定时任务
+    from .schedules.stastics import setSchedule
+    app.scheduler.add_job(setSchedule, 'cron', hour=3, args=[app])
+    # 启动定时任务调度器
+    app.scheduler.start()
 
     #应用注册
     #用户登录

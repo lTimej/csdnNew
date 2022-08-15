@@ -8,6 +8,8 @@ from sqlalchemy.exc import DatabaseError
 from sqlalchemy.orm import load_only,contains_eager
 
 from caches import contants
+from caches import dataStastics
+
 class UserBasicInfoCache():
     '''
     用户基本情况
@@ -36,9 +38,23 @@ class UserBasicInfoCache():
             if user_info == b"-1":#缓存没有数据
                 return None
             else:#缓存有数据
-                return json.loads((user_info))
+                user_dict =  json.loads((user_info))
         else:#没有缓存
-            return self.save()
+            user_dict = self.save()
+            if not user_dict:return None
+        user_dict = self.add_user_info(user_dict)
+        return user_dict
+
+    def add_user_info(self,user_dict):
+        """
+        添加用户关注数，粉丝数以及被访问数
+        :return:
+        """
+        user_dict['focus'] = dataStastics.UserFocusStastics.get(self.user_id)
+        user_dict['fans'] = dataStastics.UserFollwingStastics.get(self.user_id)
+        user_dict['visitor'] = dataStastics.UserVisitedStastics.get(self.user_id)
+        return user_dict
+
 
     def save(self):
         """
