@@ -43,6 +43,10 @@ class DefaultSettings():
     JWT_EXPIRY_HOURS = 2#token 过期时间
     JWT_REFRESH_DAYS = 14#刷新token过期时间
 
+    # 默认头像
+    DEFAULT_USER_PROFILE_PHOTO = 'group1/M00/00/00/wKiZA2L4ThiATR41AAEwN58xN6E785.png'
+    FDFS_DOMAIN = 'http://192.168.153.3:8888/'
+
 
 class CeleryConfig():
     broker_url = 'amqp://time:liujun@192.168.153.3:5672/csdn'

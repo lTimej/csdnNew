@@ -59,7 +59,7 @@ class UserBasicInfoCache():
         #构造返回数据并存入redis中
         user_dict = {
             "user_name":user.name,
-            "user_profile_photo":user.profile_photo if user.profile_photo else contants.DEFAULT_USER_PROFILE_PHOTO,
+            "head_photo": current_app.config.get('FDFS_DOMAIN') + user.profile_photo if user.profile_photo else  current_app.config.get('FDFS_DOMAIN') + contants.DEFAULT_USER_PROFILE_PHOTO,
             "user_introduction":user.introduction,
             "user_code_year":user.code_year,
             "user_career":user.profile.career

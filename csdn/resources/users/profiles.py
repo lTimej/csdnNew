@@ -15,6 +15,7 @@ class Profile(Resource):
     """
     def get(self):
         user_id = g.user_id
+        userCaches.UserBasicInfoCache(user_id).delete()
         user_dict = userCaches.UserBasicInfoCache(user_id).get()
         print(user_dict,type(user_dict))
         user_other_dict = userCaches.UserOtherInfo(user_id).get()
