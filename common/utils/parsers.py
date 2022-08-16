@@ -105,3 +105,15 @@ def check_channel_name(str1):
         return str1
     raise ValueError("{} is invalid".format(str1))
 
+def check_page(val):
+    """
+    检验页码，只能未数字，非法的转为page=0
+    :param val:
+    :return:
+    """
+    try:
+        val = int(val)
+    except:
+        val = 0
+    if val < 0:val = 0
+    return val

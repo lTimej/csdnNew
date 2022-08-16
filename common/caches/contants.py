@@ -45,3 +45,10 @@ class ChannelCacheTTL(CacheTTL):
     频道的缓存过期时间
     """
     TTL = 60 * 60
+
+class ArticleChannelCacheTTL(CacheTTL):
+    '''
+    文章频道得缓存过期时间
+    '''
+    TTL = 10 * 60
+    MAX_DELTA = 2 * 60

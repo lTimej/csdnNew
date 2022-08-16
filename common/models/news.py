@@ -42,8 +42,8 @@ class Article(db.Model):
 
     class STATUS:
         DRAFT = 0  # 草稿
-        UNREVIEWED = 1  # 待审核
-        APPROVED = 2  # 审核通过
+        APPROVED = 1  # 审核通过
+        UNREVIEWED = 2  # 待审核
         FAILED = 3  # 审核失败
         DELETED = 4  # 已删除
         BANNED = 5  # 封禁
