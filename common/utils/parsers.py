@@ -100,3 +100,8 @@ def chech_date(str):
     else:
         return _str
 
+def check_channel_name(str1):
+    if isinstance(str1,str):
+        return str1
+    raise ValueError("{} is invalid".format(str1))
+

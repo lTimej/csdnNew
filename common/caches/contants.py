@@ -28,8 +28,20 @@ class UserInfoCachesTTL(CacheTTL):
     """
     TTL = 30 * 60
 
+class UserStatusCachesTTL(CacheTTL):
+    """
+    用户信息数据缓存过期时间
+    """
+    TTL = 60 * 60
+
 class UserOtherInfoCachesTTL(CacheTTL):
     """
     用户信息数据缓存过期时间
     """
     TTL = 30 * 60
+
+class ChannelCacheTTL(CacheTTL):
+    """
+    频道的缓存过期时间
+    """
+    TTL = 60 * 60

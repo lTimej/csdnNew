@@ -42,6 +42,9 @@ def createAPP(DefaultSet,enableSet):
     #用户登录
     from .resources.users import user_bp
     app.register_blueprint(user_bp)
+    #文章注册
+    from .resources.articles import art_bp
+    app.register_blueprint(art_bp)
 
     #加载数据
     from models import db

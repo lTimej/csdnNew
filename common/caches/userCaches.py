@@ -168,4 +168,36 @@ class UserOtherInfo():
             self.redis.delete(self.key)
         except RedisError as e:
             current_app.logger.error(e)
+            
+class UserStatusCache():
+    """
+    用户是否可用
+    """
+    def __init__(self,user_id):
+        self.key = "user:status"
+        self.redis = current_app.redis_cluster
+        self.user_id = user_id
+
+    def get(self):
+        try:
+            user_status = self.redis.get(self.key)
+        except RedisError as e:
+            current_app.logger.error(e)
+            user_status = False
+        if user_status:return user_status
+
+        try:
+            users = User.query.options(load_only(User.status)).filter(User.id == self.user_id).first()
+        except DatabaseError as e:
+            current_app.logger.error(e)
+            raise e
+        if not users:return False
+        try:
+            self.redis.setex(self.key,contants.UserStatusCachesTTL.get_TTL(),users.status)
+        except DatabaseError as e:
+            current_app.logger.error(e)
+            raise e
+        return users.status
+
+
 
