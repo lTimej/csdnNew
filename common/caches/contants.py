@@ -52,3 +52,10 @@ class ArticleChannelCacheTTL(CacheTTL):
     '''
     TTL = 10 * 60
     MAX_DELTA = 2 * 60
+
+class ArticleDetailCacheTTL(CacheTTL):
+    """
+    文章详情缓存过期时间
+    """
+    TTL = 60 * 60
+    MAX_DELTA = 2 * 60

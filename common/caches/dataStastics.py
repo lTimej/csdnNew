@@ -5,6 +5,7 @@ from redis.exceptions import RedisError
 
 from models import db
 from models.user import User,Relation,Visitors
+from models.news import Article,ArticleContent,Comment,CommentLiking,Attitude,Collection
 
 class StasticsBase(object):
     '''
@@ -97,4 +98,30 @@ class UserVisitedStastics(StasticsBase):
     @staticmethod
     def db_querys():
         return db.session.query(Visitors.user_id,Visitors.count).all()
+
+#文章阅读数
+class ArticleReadStastics(StasticsBase):
+    key = "article:read"
+
+#文章评论数
+class ArticleCommentStastics(StasticsBase):
+    key = "article:comment"
+
+    @staticmethod
+    def db_querys():
+        return db.session.query(Comment.article_id,func.count(Comment.id)).filter(Comment.status == Comment.STATUS.APPROVED).group_by(Comment.article_id).all()
+
+#文章点赞数
+class ArticleLikeStastics(StasticsBase):
+    key = "article:like"
+    @staticmethod
+    def db_querys():
+        return db.session.query(Attitude.article_id,func.count(Attitude.article_id)).filter(Attitude.attitude == Attitude.ATTITUDE.LIKING).group_by(Attitude.article_id).all()
+
+#文章收藏量
+class ArticleCollectionStastics(StasticsBase):
+    key = "article:collection"
+    @staticmethod
+    def db_querys():
+        return db.session.query(Collection.article_id,func.count(Collection.article_id)).filter(Collection.is_deleted==False).group_by(Collection.article_id).all()
 
