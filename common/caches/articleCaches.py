@@ -63,6 +63,7 @@ class ChannelArticleCache():
             current_app.logger.error(e)
         total_num = len(return_article)
         return total_num,return_article[(page-1)*page_num:page*page_num]
+
     def delete(self):
         try:
             self.redis.delete(self.key)
@@ -142,6 +143,7 @@ class ArticleDetailCache():
         except RedisError as e:
             current_app.logger.error(e)
         return article_dict
+
     def delete(self):
         try:
             self.redis.delete(self.key)

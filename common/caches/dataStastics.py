@@ -29,6 +29,7 @@ class StasticsBase(object):
             return int(count)
         else:
             return 0
+
     @classmethod
     def incr(cls,user_id,incr_num=1):
         '''
@@ -59,7 +60,6 @@ class StasticsBase(object):
         pl = current_app.redis_master.pipeline()
         pl.zadd(cls.key, *counts)
         pl.execute()
-
 
 #用户关注数
 class UserFocusStastics(StasticsBase):

@@ -59,3 +59,16 @@ class ArticleDetailCacheTTL(CacheTTL):
     """
     TTL = 60 * 60
     MAX_DELTA = 2 * 60
+
+class UserFocusCacheTTL(CacheTTL):
+    """
+    用户关注信息缓存过期时间
+    """
+    TTL = 60 * 60
+    MAX_DELTA = 2 * 60
+class UserFansCacheTTL(CacheTTL):
+    """
+    用户粉丝信息缓存过期时间
+    """
+    TTL = 60 * 60
+    MAX_DELTA = 2 * 60
