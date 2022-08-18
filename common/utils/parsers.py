@@ -6,6 +6,9 @@ from utils.getMD5 import getMd5
 
 from models.user import UserProfile
 
+from caches.userCaches import UserBasicInfoCache
+from caches.articleCaches import ArticleDetailCache
+
 
 #手机号验证
 def mobile(mobile_str):
@@ -117,3 +120,30 @@ def check_page(val):
         val = 0
     if val < 0:val = 0
     return val
+
+def check_user_id(val):
+    try:
+        val = int(val)
+    except Exception as e:
+        raise ValueError("{} is invalid".format(val))
+    else:
+        if val <= 0:
+            raise ValueError("{} is invalid".format(val))
+
+        flag = UserBasicInfoCache(val).exist()
+        if not flag:
+            raise ValueError("{} is invalid".format(val))
+        return val
+
+def check_article_id(val):
+    try:
+        val = int(val)
+    except Exception as e:
+        raise ValueError("{} is invalid".format(val))
+    else:
+        if val < 0:
+            raise ValueError("{} is invalid".format(val))
+        flag = ArticleDetailCache(val).exists()
+        if flag:
+            return val
+        else : raise ValueError("{} is invalid".format(val))

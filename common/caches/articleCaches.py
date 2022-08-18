@@ -126,7 +126,7 @@ class ArticleDetailCache():
             return {}
         article_dict = {
             'title':articles.title,
-            'user_id':articles.user_id,
+            'user_id':str(articles.user_id),
             'create_time':str(articles.ctime)[:str(articles.ctime).find(' ')],
             'art_id':articles.id,
             'channel_id':articles.channel_id,
@@ -149,6 +149,24 @@ class ArticleDetailCache():
             self.redis.delete(self.key)
         except RedisError as e:
             current_app.logger.error(e)
+
+    def exists(self):
+        try:
+            article = self.redis.get(self.key)
+        except RedisError as e:
+            current_app.logger.error(e)
+            article = None
+        if article:
+            if article == b'-1':
+                return False
+            else:
+                return True
+        else:
+            articles = self.save()
+            if articles:
+                return True
+            return False
+
 
 
 

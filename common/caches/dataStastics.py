@@ -39,7 +39,7 @@ class StasticsBase(object):
         :return:无
         '''
         try:
-            current_app.redis_master.zincrby(cls.key,user_id,incr_num)
+            current_app.redis_master.zincrby(cls.key,incr_num,user_id)
         except RedisError as e:
             current_app.logger.error(e)
             raise e
@@ -51,14 +51,13 @@ class StasticsBase(object):
         :param db_querys: 相关query操作集合
        :return:
         '''
-        counts = []
+        counts = {}
         for user_id,count in db_querys:
-            counts.append(count)
-            counts.append(user_id)
+            counts[user_id] = count
         if not counts:
             return
         pl = current_app.redis_master.pipeline()
-        pl.zadd(cls.key, *counts)
+        pl.zadd(cls.key, counts)
         pl.execute()
 
 #用户关注数
@@ -118,6 +117,14 @@ class ArticleLikeStastics(StasticsBase):
     def db_querys():
         return db.session.query(Attitude.article_id,func.count(Attitude.article_id)).filter(Attitude.attitude == Attitude.ATTITUDE.LIKING).group_by(Attitude.article_id).all()
 
+#文章用户点赞数
+class UserArticleLikeStastics(StasticsBase):
+    key = "article:like"
+    @staticmethod
+    def db_querys():
+        return db.session.query(Attitude.user_id,func.count(Attitude.article_id)).filter(Attitude.attitude == Attitude.ATTITUDE.LIKING).group_by(Attitude.user_id).all()
+
+
 #文章收藏量
 class ArticleCollectionStastics(StasticsBase):
     key = "article:collection"
@@ -125,3 +132,22 @@ class ArticleCollectionStastics(StasticsBase):
     def db_querys():
         return db.session.query(Collection.article_id,func.count(Collection.article_id)).filter(Collection.is_deleted==False).group_by(Collection.article_id).all()
 
+#用户文章收藏量
+class UserArticleCollectionStastics(StasticsBase):
+    key = "article:collection"
+    @staticmethod
+    def db_querys():
+        return db.session.query(Collection.user_id,func.count(Collection.article_id)).filter(Collection.is_deleted==False).group_by(Collection.user_id).all()
+
+
+class CommentLikeStastics(StasticsBase):
+    key = "article:comment:like"
+    @staticmethod
+    def db_querys():
+        return db.ssion.query(CommentLiking.comment_id,func.count(CommentLiking.comment_id)).filter(CommentLiking.is_deleted==False).group_by(CommentLiking.comment_id).all()
+
+class CommentResponseStastics(StasticsBase):
+    key = "article:comment:response"
+    @staticmethod
+    def db_querys():
+        return db.session.query(Comment.parent_id,func.count(Comment.id)).filter(Comment.status==Comment.STATUS.APPROVED,Comment.parent_id != None).group_by(Comment.parent_id).all()

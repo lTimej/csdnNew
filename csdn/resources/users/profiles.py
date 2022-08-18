@@ -30,6 +30,7 @@ class Profile(Resource):
             return {"msg":"data not exist"},403
         user_dict.update(user_other_dict)
         return user_dict,201
+
     def patch(self):
         """
         用户信息修改，patch可实现部分修改
@@ -133,25 +134,3 @@ class Profile(Resource):
         if is_update_userProfileInfo:
             userCaches.UserOtherInfo(g.user_id).delete()
         return return_user_dict,201
-
-
-
-
-
-
-
-
-
-
-        args = parser.parse_args()
-
-
-
-
-
-
-        return {"msg":"ok"},401
-
-
-
-

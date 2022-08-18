@@ -26,9 +26,10 @@ class UserFocusCaches():
             current_app.logger.error(e)
             focus = None
         if focus:
-            return [str(target_id) for target_id in focus]
-        focus = self.save()
-        return focus
+            focus_list = [int(target_id) for target_id in focus]
+        else:
+            focus_list = self.save()
+        return focus_list
 
     def save(self):
         try:
@@ -53,6 +54,30 @@ class UserFocusCaches():
             current_app.logger.error(e)
         return return_target_user_ids
 
+    def update(self,target_user_id,timestamp,flag=1):
+        try:
+            ttl = self.redis.ttl(self.key)
+            if ttl > contants.ALLOW_UPDATE_FOLLOW_CACHE_TTL_LIMIT:
+                if flag>0:
+                    cache = {target_user_id:timestamp}
+                    self.redis.zadd(self.key,cache)
+                    # a = self.redis.zscore(self.key,target_user_id)
+                    # print(target_user_id,"ttttttttttttttttttttttttttttttttttt",a)
+                else:
+                    self.redis.zrem(self.key,target_user_id)
+        except RedisError as e:
+            current_app.logger.error(e)
+
+    def delete(self):
+        try:
+            self.redis.delete(self.key)
+        except RedisError as e:
+            current_app.logger.error(e)
+
+    def is_focus(self,target_user_id):
+        focus = self.get()
+        return target_user_id in focus
+
 class UserFansCaches():
     """
     用户粉丝列表缓存
@@ -67,11 +92,12 @@ class UserFansCaches():
     def get(self):
         try:
             fans = self.redis.zrevrange(self.key,0,-1)
+
         except RedisError as e:
             current_app.logger.error(e)
             fans = None
         if fans:
-            return [str(user_id) for user_id in fans]
+            return [int(user_id) for user_id in fans]
         return self.save()
 
     def save(self):
@@ -98,3 +124,21 @@ class UserFansCaches():
             current_app.logger.error(e)
 
         return return_list
+
+    def update(self,user_id,timestamp,flag=1):
+        try:
+            ttl = self.redis.ttl(self.key)
+            if ttl > contants.ALLOW_UPDATE_FOLLOW_CACHE_TTL_LIMIT:
+                if flag > 1:
+                    cache = {user_id:timestamp}
+                    self.redis.zadd(self.key,cache)
+                else:
+                    self.redis.zrem(self.key,user_id)
+        except RedisError as e:
+            current_app.logger.error(e)
+            
+    def delete(self):
+        try:
+            self.redis.delete(self.key)
+        except RedisError as e:
+            current_app.logger.error(e)
