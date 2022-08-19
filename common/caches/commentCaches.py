@@ -10,12 +10,14 @@ from caches.userCaches import UserBasicInfoCache
 from caches import dataStastics
 from caches import  contants
 
+from models.news import CommentLiking
+
 from models.news import Comment
 
 
 class CommentCaches():
     """
-    评论缓存
+    评论缓存,获取评论详细信息
     """
     def __init__(self,comment_id):
         self.key = "article:comment:{}".format(comment_id)
@@ -24,7 +26,7 @@ class CommentCaches():
 
     def get(self):
         '''
-
+        comment_id  ,   parent_comment_id  ,  ctime  ,  author_id  ,  is_top
         :return:字典，评论信息
         '''
         try:
@@ -66,6 +68,7 @@ class CommentCaches():
             "is_top": comment.is_top,
             "content": comment.content
         }
+        print("hahahahhah555555555555555555555555555ahahahhaha",comment_dict)
         try:
             self.redis.setex(self.key,contants.ArticleCommentCacheTTL.get_TTL(),json.dumps(comment_dict))
         except RedisError as e:
@@ -74,23 +77,28 @@ class CommentCaches():
 
     @classmethod
     def get_list(cls,comments):
+        '''
+        评论列表详细信息
+        :param comments: 列表套字典
+        :return:
+        '''
         query = []
         return_data = []
         cache = {}
         for comment_id in comments:
             comment = CommentCaches(comment_id).get()
-            if comment:
+            if comment:#comment是一个字典
                 cache[comment_id] = comment
                 return_data.append(comment)
             else:
                 query.append(comment_id)
-        if not query:
+        if not query:#缓存都有，直接返回
             return return_data
         else:
             comment_query = Comment.query.filter(Comment.id.in_(query),Comment.status==Comment.STATUS.APPROVED).all()
             pl = current_app.redis_cluster.pipeline()
             for c in comment_query:
-                cache = {
+                caches = {
                     "comment_id": str(c.id),
                     "parent_comment_id": str(c.parent_id),
                     "ctime": str(c.ctime),
@@ -98,9 +106,9 @@ class CommentCaches():
                     "is_top": c.is_top,
                     "content": c.content
                 }
-                pl.setex(CommentCaches(c.id).key,contants.ArticleCommentCacheTTL.get_TTL(),json.dumps(cache))
-                cache = cls.add_field(cache)
-                cache[c.id] = cache
+                pl.setex(CommentCaches(c.id).key,contants.ArticleCommentCacheTTL.get_TTL(),json.dumps(caches))
+                caches = cls.add_field(caches)
+                cache[c.id] = caches
             try:
                 pl.execute()
             except RedisError as e:
@@ -134,13 +142,13 @@ class CommentCaches():
         return False
 
 
-class ArticleCommentBaseCaches():
+class ArticleCommentBaseCaches(object):
     """
-    文章缓存
+    文章缓存，获取评论id
     """
     def __init__(self,id_val):
-        self.key = self.set_key()
         self.id_val = id_val
+        self.key = self.set_key()
         self.redis = current_app.redis_cluster
 
     def set_key(self):
@@ -163,13 +171,14 @@ class ArticleCommentBaseCaches():
         '''
         try:#从缓存中取
             pl = self.redis.pipeline()
-            pl.zcard(self.key)
-            pl.zrange(self.key,0,0,withscores=True)
+            pl.zcard(self.key)#获取缓存中该key下的总个数
+            pl.zrange(self.key,0,0,withscores=True)#返回最后一个{comment_id,timestamp}
             if offset:#在时间范围里取评论数
+                #zrevrangebyscore(key,max(分数最大即score值),min（分数最小）,start（从第几个开始）,nums（拿几个）,withscores)
                 pl.zrevrangebyscore(self.key,offset-1,0,0,limit,withscores=True)
             else:
                 pl.zrevrange(self.key,0,limit,withscores=True)
-
+            #end_id,res都是列表形式   [(comment_id,timestamp),(),......]
             total_num,end_id,res = pl.execute()
             print("----------------------????----------------",total_num,end_id,res)
         except DatabaseError as e:
@@ -178,8 +187,8 @@ class ArticleCommentBaseCaches():
             end_id = None
             res = []
         if total_num > 0:#有缓存，直接返回
-            end_id = end_id[0][0]
-            last_id = int(res[-1][0]) if res else None
+            end_id = end_id[0][1]#  timestamp
+            last_id = int(res[-1][1]) if res else None#最后一个 timestamp
             return total_num,end_id,last_id,[int(cid[0]) for cid in res]
 
         total_num = self.cal_count()
@@ -218,11 +227,14 @@ class ArticleCommentBaseCaches():
 
     def update(self,comment):
         try:
-            ttl = self.redis.ttl(self.key)
-            if ttl > contants.ALLOW_UPDATE_ARTICLE_COMMENTS_CACHE_TTL_LIMIT:
-                score = comment.ctime.timestamp()
-                self.redis.zadd(self.key,{comment.id:score})
+            # ttl = self.redis.ttl(self.key)
+            # print(ttl,"====","222222222222222222000000000000009999999999999", {comment.id: comment.ctime.timestamp()})
+            # if ttl > contants.ALLOW_UPDATE_ARTICLE_COMMENTS_CACHE_TTL_LIMIT:
+            score = comment.ctime.timestamp()
+            self.redis.zadd(self.key,{comment.id:score})
+            print("3333333333333333333000000000000009999999999999",{comment.id:score})
         except RedisError as e:
+            print(666666666666666666,"error")
             current_app.logger.error(e)
 
     def exists(self,comment):
@@ -235,8 +247,8 @@ class ArticleCommentBaseCaches():
 class ArticleCommentCaches(ArticleCommentBaseCaches):
 
     def set_key(self):
-        self.key = "article:comments:{}".format(self.id_val)
-        return self.key
+        key = "article:comments:{}".format(self.id_val)
+        return key
 
     def cal_count(self):
         return dataStastics.ArticleCommentStastics.get(self.id_val)
@@ -260,6 +272,52 @@ class ArticleResponseCommentCaches(ArticleCommentBaseCaches):
 
     def get_cache_ttl(self):
         return contants.ArticleCommentCacheTTL.get_TTL()
+
+class CommentAttitudeCaches():
+    """
+    评论点赞情况
+    """
+    def __init__(self,comment_id):
+        self.key = "comment:attitude:{}".format(comment_id)
+        self.redis = current_app.redis_cluster
+        self.comment_id = comment_id
+
+    def get(self):
+        try:
+            comment = self.redis.get(self.key)
+        except RedisError as e:
+            current_app.logger.error(e)
+            comment = []
+
+        if comment: return json.loads(comment)
+
+        try:
+            comment_obj = CommentLiking.query.options(load_only(CommentLiking.user_id)).filter(CommentLiking.comment_id == self.comment_id,CommentLiking.is_deleted==False).all()
+        except DatabaseError as e:
+            current_app.logger.error(e)
+            return {"msg": "database error"},405
+        if not comment_obj: return []
+        comment_like = []
+        for comm in comment_obj:
+            comment_like.append(comm.user_id)
+
+        try:
+            self.redis.setex(self.key,contants.ArticleCommentCacheTTL.get_TTL(),json.dumps(comment_like))
+        except RedisError as e:
+            current_app.logger.error(e)
+
+        return comment_like
+
+    def exists(self,user_id):
+        user_ids = self.get()
+        return user_id in user_ids
+
+    def delete(self):
+        try:
+            self.redis.delete(self.key)
+        except RedisError as e:
+            current_app.logger.error(e)
+
 
 
 

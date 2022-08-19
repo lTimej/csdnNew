@@ -147,3 +147,12 @@ def check_article_id(val):
         if flag:
             return val
         else : raise ValueError("{} is invalid".format(val))
+
+def check_type(val):
+    try:
+        if val in ['a','c']:
+            return val
+        else:
+            raise ValueError("{} is invalid".format(val))
+    except Exception as e:
+        raise ValueError("{} is invalid".format(val))

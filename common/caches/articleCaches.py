@@ -167,6 +167,13 @@ class ArticleDetailCache():
                 return True
             return False
 
+    def is_allow_comment(self):
+        res = self.get()
+        if not res:
+            res = self.save()
+        if res.get("allow_comment"):return True
+        return False
+
 
 
 
