@@ -47,6 +47,9 @@ class DefaultSettings():
     DEFAULT_USER_PROFILE_PHOTO = 'group1/M00/00/00/wKiZA2L4ThiATR41AAEwN58xN6E785.png'
     FDFS_DOMAIN = 'http://192.168.153.3:8888/'
 
+    #es配置
+    ES = ["192.168.153.3:9200"]
+
 
 class CeleryConfig():
     broker_url = 'amqp://time:liujun@192.168.153.3:5672/csdn'

@@ -45,6 +45,9 @@ def createAPP(DefaultSet,enableSet):
     #文章注册
     from .resources.articles import art_bp
     app.register_blueprint(art_bp)
+    #搜索注册
+    from .resources.searchs import search_bp
+    app.register_blueprint(search_bp)
 
     #加载数据
     from models import db
@@ -70,5 +73,15 @@ def createAPP(DefaultSet,enableSet):
     from fdfs_client.client import Fdfs_client
     app.client = Fdfs_client('/home/time/csdnNew/csdnNew/common/utils/fdfs/client.conf')
 
+    #es
+    from elasticsearch import Elasticsearch
+    app.es = Elasticsearch(
+        app.config.get("ES"),
+         # sniff before doing anything
+        sniff_on_start=True,
+        # refresh nodes after a node fails to respond
+        sniff_on_connection_fail=True,
+        # and also every 60 seconds
+        sniffer_timeout=60)
     return app
 
